@@ -1,4 +1,4 @@
-from tensorflow.python.keras import layers, models, Model, Sequential
+from tensorflow.keras import layers, models, Model, Sequential
 
 
 def AlexNet_v1(im_height=224, im_width=224, num_classes=1000):
@@ -22,7 +22,7 @@ def AlexNet_v1(im_height=224, im_width=224, num_classes=1000):
     x = layers.Dense(num_classes)(x)                # output(None, 1000)
     predict = layers.Softmax()(x)
 
-    model = models.Model(inputs=input_image, output=predict)
+    model = models.Model(inputs=input_image, outputs=predict)
     return model
 
 
