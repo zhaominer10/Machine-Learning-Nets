@@ -1,2 +1,2 @@
-model_checkpoint_path: "myAlex.ckpt"
-all_model_checkpoint_paths: "myAlex.ckpt"
+model_checkpoint_path: "myAlex_gpu.ckpt"
+all_model_checkpoint_paths: "myAlex_gpu.ckpt"
