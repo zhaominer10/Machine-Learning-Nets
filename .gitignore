@@ -138,3 +138,6 @@ dmypy.json
 # Cython debug symbols
 cython_debug/
 
+# User specific file
+.idea/
+pytorch/VGG/vgg16Net.pth
