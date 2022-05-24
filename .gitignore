@@ -141,3 +141,4 @@ cython_debug/
 # User specific file
 .idea/
 pytorch/VGG/vgg16Net.pth
+pytorch/official_demo/data/
