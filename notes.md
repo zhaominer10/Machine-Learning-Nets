@@ -1,3 +1,3 @@
 - [*args & **kwargs](https://www.programiz.com/python-programming/args-and-kwargs#:~:text=*args%20and%20**kwargs%20are,the%20tuple%20can%20be%20performed.)
 - [layer weight initializers](https://keras.io/api/layers/initializers/#variancescaling-class) in keras
-- 
+- [batch normalization](https://towardsdatascience.com/batch-normalization-in-3-levels-of-understanding-14c2da90a338)

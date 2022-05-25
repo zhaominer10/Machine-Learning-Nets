@@ -142,3 +142,4 @@ cython_debug/
 .idea/
 pytorch/VGG/vgg16Net.pth
 pytorch/official_demo/data/
+tensorflow/VGG/weights/
