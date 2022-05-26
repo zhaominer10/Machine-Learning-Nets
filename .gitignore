@@ -143,3 +143,4 @@ cython_debug/
 pytorch/VGG/vgg16Net.pth
 pytorch/official_demo/data/
 tensorflow/VGG/weights/
+tensorflow/AlexNet/weights/

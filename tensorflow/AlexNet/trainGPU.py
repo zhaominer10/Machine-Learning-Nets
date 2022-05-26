@@ -10,6 +10,7 @@ from model import AlexNet_v1
 os.environ[ 'CUDA_DEVICE_ORDER' ] = 'PCI_BUS_ID'
 os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '0'
 
+
 def main():
     gpus = tf.config.experimental.list_physical_devices('GPU')
     if gpus:
@@ -32,7 +33,7 @@ def main():
 
     im_height = 224
     im_width = 224
-    batch_size = 32
+    batch_size = 10
     epochs = 10
 
     data_class = [ cla for cla in os.listdir(train_dir) if os.path.isdir((os.path.join(train_dir, cla))) ]
@@ -55,7 +56,6 @@ def main():
 
     print("using {} for training, {} images for validation.".format(train_num, val_num))
 
-
     def process_path(img_path, label):
         label = tf.one_hot(label, depth=class_num)
         image = tf.io.read_file(img_path)
@@ -63,7 +63,6 @@ def main():
         image = tf.image.convert_image_dtype(image, tf.float32)
         image = tf.image.resize(image, [ im_height, im_width ])
         return image, label
-
 
     AUTOTUNE = tf.data.experimental.AUTOTUNE
 
@@ -90,7 +89,6 @@ def main():
     val_loss = tf.keras.metrics.Mean(name='val_loss')
     val_accuracy = tf.keras.metrics.CategoricalAccuracy(name='val_accuracy')
 
-
     @tf.function
     def train_step(_images, _labels):
         with tf.GradientTape() as tape:
@@ -102,7 +100,6 @@ def main():
         train_loss(loss)
         train_accuracy(_labels, predictions)
 
-
     @tf.function
     def test_step(_images, _labels):
         predictions = model(_images)
@@ -110,7 +107,6 @@ def main():
 
         val_loss(t_loss)
         val_accuracy(_labels, predictions)
-
 
     best_val_loss = float('inf')
     for epoch in range(1, epochs + 1):
@@ -122,13 +118,13 @@ def main():
         t1 = time.perf_counter()
         for index, (images, labels) in enumerate(train_dataset):
             train_step(images, labels)
-            if index+1 == train_num // batch_size:
+            if index + 1 == train_num // batch_size:
                 break
-        print(time.perf_counter()-t1)
+        print(time.perf_counter() - t1)
 
         for index, (images, labels) in enumerate(val_dataset):
             test_step(images, labels)
-            if index+1 == val_num // batch_size:
+            if index + 1 == val_num // batch_size:
                 break
 
         template = 'Epoch {}, Loss: {}, Accuracy: {}, Test Loss: {}, Test Accuracy: {}'
