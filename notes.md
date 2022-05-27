@@ -1,3 +1,5 @@
 - [*args & **kwargs](https://www.programiz.com/python-programming/args-and-kwargs#:~:text=*args%20and%20**kwargs%20are,the%20tuple%20can%20be%20performed.)
 - [layer weight initializers](https://keras.io/api/layers/initializers/#variancescaling-class) in keras
 - [batch normalization](https://towardsdatascience.com/batch-normalization-in-3-levels-of-understanding-14c2da90a338)
+- Pytorch [nn.Dropout vs. nn.functional.dropout](https://stackoverflow.com/questions/53419474/pytorch-nn-dropout-vs-f-dropout#:~:text=The%20dropout%20module%20nn.,about%20the%20evaluation%20%2F%20prediction%20mode.)
+- 
