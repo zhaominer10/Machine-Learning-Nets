@@ -1,18 +1,17 @@
-import glob
-import os
-import random
-import time
-import json
+import matplotlib.pyplot as plt
+from model_bn import GoogLeNet
 import tensorflow as tf
-from model import vgg
-
-os.environ[ 'CUDA_DEVICE_ORDER' ] = 'PCI_BUS_ID'
-os.environ[ 'CUDA_VISIBLE_DEVICES' ] = '0'
+import json
+import os
+import time
+import glob
+import random
+os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 
 def main():
     gpus = tf.config.experimental.list_physical_devices("GPU")
-    print(gpus)
     if gpus:
         try:
             for gpu in gpus:
@@ -28,17 +27,13 @@ def main():
     assert os.path.exists(train_dir), "cannot find {}".format(train_dir)
     assert os.path.exists(validation_dir), "cannot find {}".format(validation_dir)
 
-    # create direction for saving weights
-    if not os.path.exists("weights"):
-        os.makedirs("weights")
-
     im_height = 224
     im_width = 224
-    batch_size = 15
-    epochs = 10
+    batch_size = 32
+    epochs = 30
 
     # class dict
-    data_class = [ cla for cla in os.listdir(train_dir) if os.path.isdir(os.path.join(train_dir, cla)) ]
+    data_class = [cla for cla in os.listdir(train_dir) if os.path.isdir(os.path.join(train_dir, cla))]
     class_num = len(data_class)
     class_dict = dict((value, index) for index, value in enumerate(data_class))
 
@@ -50,50 +45,61 @@ def main():
         json_file.write(json_str)
 
     # load train images list
-    train_image_list = glob.glob(train_dir + "/*/*.jpg")
+    train_image_list = glob.glob(train_dir+"/*/*.jpg")
     random.shuffle(train_image_list)
     train_num = len(train_image_list)
     assert train_num > 0, "cannot find any .jpg file in {}".format(train_dir)
-    train_label_list = [ class_dict[ path.split(os.path.sep)[ -2 ] ] for path in train_image_list ]
+    train_label_list = [class_dict[path.split(os.path.sep)[-2]] for path in train_image_list]
 
     # load validation images list
-    val_image_list = glob.glob(validation_dir + "/*/*.jpg")
+    val_image_list = glob.glob(validation_dir+"/*/*.jpg")
     random.shuffle(val_image_list)
     val_num = len(val_image_list)
     assert val_num > 0, "cannot find any .jpg file in {}".format(validation_dir)
-    val_label_list = [ class_dict[ path.split(os.path.sep)[ -2 ] ] for path in val_image_list ]
+    val_label_list = [class_dict[path.split(os.path.sep)[-2]] for path in val_image_list]
 
     print("using {} images for training, {} images for validation.".format(train_num,
                                                                            val_num))
 
-    def process_path(img_path, label):
+    def process_train_img(img_path, label):
         label = tf.one_hot(label, depth=class_num)
         image = tf.io.read_file(img_path)
         image = tf.image.decode_jpeg(image)
         image = tf.image.convert_image_dtype(image, tf.float32)
-        image = tf.image.resize(image, [ im_height, im_width ])
+        image = tf.image.resize(image, [im_height, im_width])
+        image = tf.image.random_flip_left_right(image)
+        image = (image - 0.5) / 0.5
+        return image, label
+
+    def process_val_img(img_path, label):
+        label = tf.one_hot(label, depth=class_num)
+        image = tf.io.read_file(img_path)
+        image = tf.image.decode_jpeg(image)
+        image = tf.image.convert_image_dtype(image, tf.float32)
+        image = tf.image.resize(image, [im_height, im_width])
+        image = (image - 0.5) / 0.5
         return image, label
 
     AUTOTUNE = tf.data.experimental.AUTOTUNE
 
     # load train dataset
     train_dataset = tf.data.Dataset.from_tensor_slices((train_image_list, train_label_list))
-    train_dataset = train_dataset.shuffle(buffer_size=train_num) \
-        .map(process_path, num_parallel_calls=AUTOTUNE) \
-        .repeat().batch(batch_size).prefetch(AUTOTUNE)
+    train_dataset = train_dataset.shuffle(buffer_size=train_num)\
+                                 .map(process_train_img, num_parallel_calls=AUTOTUNE)\
+                                 .repeat().batch(batch_size).prefetch(AUTOTUNE)
 
     # load train dataset
     val_dataset = tf.data.Dataset.from_tensor_slices((val_image_list, val_label_list))
-    val_dataset = val_dataset.map(process_path, num_parallel_calls=AUTOTUNE) \
-        .repeat().batch(batch_size)
+    val_dataset = val_dataset.map(process_val_img, num_parallel_calls=tf.data.experimental.AUTOTUNE)\
+                             .repeat().batch(batch_size)
 
     # 实例化模型
-    model = vgg("vgg16", 224, 224, 5)
-    # model.summary()
+    model = GoogLeNet(im_height=224, im_width=224, num_classes=5, aux_logits=True)
+    model.summary()
 
     # using keras low level api for training
     loss_object = tf.keras.losses.CategoricalCrossentropy(from_logits=False)
-    optimizer = tf.keras.optimizers.Adam(learning_rate=0.0001)
+    optimizer = tf.keras.optimizers.Adam(learning_rate=0.0003)
 
     train_loss = tf.keras.metrics.Mean(name='train_loss')
     train_accuracy = tf.keras.metrics.CategoricalAccuracy(name='train_accuracy')
@@ -102,44 +108,46 @@ def main():
     test_accuracy = tf.keras.metrics.CategoricalAccuracy(name='test_accuracy')
 
     @tf.function
-    def train_step(_images, _labels):
+    def train_step(images, labels):
         with tf.GradientTape() as tape:
-            predictions = model(_images, training=True)
-            loss = loss_object(_labels, predictions)
+            aux1, aux2, output = model(images, training=True)
+            loss1 = loss_object(labels, aux1)
+            loss2 = loss_object(labels, aux2)
+            loss3 = loss_object(labels, output)
+            loss = loss1 * 0.3 + loss2 * 0.3 + loss3
         gradients = tape.gradient(loss, model.trainable_variables)
         optimizer.apply_gradients(zip(gradients, model.trainable_variables))
 
         train_loss(loss)
-        train_accuracy(_labels, predictions)
+        train_accuracy(labels, output)
 
     @tf.function
-    def test_step(_images, _labels):
-        predictions = model(_images, training=False)
-        t_loss = loss_object(_labels, predictions)
+    def test_step(images, labels):
+        _, _, output = model(images, training=False)
+        t_loss = loss_object(labels, output)
 
         test_loss(t_loss)
-        test_accuracy(_labels, predictions)
+        test_accuracy(labels, output)
 
     best_test_loss = float('inf')
     train_step_num = train_num // batch_size
     val_step_num = val_num // batch_size
-    for epoch in range(1, epochs + 1):
-        train_loss.reset_states()  # clear history info
-        train_accuracy.reset_states()  # clear history info
-        test_loss.reset_states()  # clear history info
-        test_accuracy.reset_states()  # clear history info
+    for epoch in range(1, epochs+1):
+        train_loss.reset_states()        # clear history info
+        train_accuracy.reset_states()    # clear history info
+        test_loss.reset_states()         # clear history info
+        test_accuracy.reset_states()     # clear history info
 
         t1 = time.perf_counter()
         for index, (images, labels) in enumerate(train_dataset):
-            print(index)
             train_step(images, labels)
-            if index + 1 == train_step_num:
+            if index+1 == train_step_num:
                 break
-        print(time.perf_counter() - t1)
+        print(time.perf_counter()-t1)
 
         for index, (images, labels) in enumerate(val_dataset):
             test_step(images, labels)
-            if index + 1 == val_step_num:
+            if index+1 == val_step_num:
                 break
 
         template = 'Epoch {}, Loss: {}, Accuracy: {}, Test Loss: {}, Test Accuracy: {}'
@@ -148,14 +156,13 @@ def main():
                               train_accuracy.result() * 100,
                               test_loss.result(),
                               test_accuracy.result() * 100))
+
         if test_loss.result() < best_test_loss:
-            model.save_weights("./weights/vgg_16.ckpt".format(epoch), save_format='tf')
+            best_test_loss = test_loss.result()
+            # TODO fix problem listed below
+            # model.save("./myGoogLeNet.h5", overwrite=True)
+            # 这里有问题，无法通过save将模型存储为h5格式
 
 
 if __name__ == '__main__':
     main()
-
-
-"""
-再GPU版本中，用的是tf.data数据流接口，可以实现多线程读取数据，从而实现加速训练的效果
-"""
