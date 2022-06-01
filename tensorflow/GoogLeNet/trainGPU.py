@@ -1,4 +1,3 @@
-import matplotlib.pyplot as plt
 from model_bn import GoogLeNet
 import tensorflow as tf
 import json
@@ -95,7 +94,7 @@ def main():
 
     # 实例化模型
     model = GoogLeNet(im_height=224, im_width=224, num_classes=5, aux_logits=True)
-    model.summary()
+    # model.summary()
 
     # using keras low level api for training
     loss_object = tf.keras.losses.CategoricalCrossentropy(from_logits=False)
@@ -160,7 +159,7 @@ def main():
         if test_loss.result() < best_test_loss:
             best_test_loss = test_loss.result()
             # TODO fix problem listed below
-            # model.save("./myGoogLeNet.h5", overwrite=True)
+            # model.save_weights("./myGoogLeNet.h5", overwrite=True)
             # 这里有问题，无法通过save将模型存储为h5格式
 
 
