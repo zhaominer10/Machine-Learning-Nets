@@ -145,3 +145,5 @@ pytorch/official_demo/data/
 pytorch/GoogleNet/googlenet.pth
 tensorflow/VGG/weights/
 tensorflow/AlexNet/weights/
+tensorflow/GoogLeNet/weights/
+tensorflow/GoogLeNet/myGoogLeNet.h5
