@@ -57,6 +57,7 @@ def main():
 
     print('Using {} images for training, {} images for validation.'.format(train_num, val_num))
 
+    # transform learning option 1
     net = resnet34()    # 此时的实例化模型有1000个节点
     model_weight_path = 'resnet34-pre.pth'
     missing_keys, unexpected_keys = net.load_state_dict(torch.load(model_weight_path), strict=False)
