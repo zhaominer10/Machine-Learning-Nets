@@ -143,6 +143,10 @@ cython_debug/
 pytorch/VGG/vgg16Net.pth
 pytorch/official_demo/data/
 pytorch/GoogleNet/googlenet.pth
+pytorch/ResNet/resnet34-pre.pth
+pytorch/ResNet/resnet34.pth
+pytorch/ResNet/resnext50_32x4d.pth
+pytorch/ResNet/resnext50_32x4d_pre.pth
 tensorflow/VGG/weights/
 tensorflow/AlexNet/weights/
 tensorflow/GoogLeNet/weights/
