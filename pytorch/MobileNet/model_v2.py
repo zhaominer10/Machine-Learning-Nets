@@ -23,7 +23,7 @@ def _make_divisible(ch, divisor=8, min_ch=None):
 # 有多种写法，参见：https://blog.csdn.net/qq_41488595/article/details/123305865
 class ConvBNReLU(nn.Sequential):
     def __init__(self, in_channel, out_channel, kernel_size=3, stride=1, groups=1):
-        padding = (kernel_size - 1) / 2
+        padding = (kernel_size - 1) // 2
         super(ConvBNReLU, self).__init__(
             nn.Conv2d(in_channel, out_channel, kernel_size, stride, padding, groups=groups, bias=False),
             nn.BatchNorm2d(out_channel),

@@ -55,11 +55,11 @@ print('using {} dataloader workers every process.'.format(nw))
 train_loader = torch.utils.data.DataLoader(train_dataset,
                                            batch_size=batch_size,
                                            shuffle=True,
-                                           num_workers=nw)
+                                           num_workers=0)
 val_loader = torch.utils.data.DataLoader(val_dataset,
                                          batch_size=batch_size,
                                          shuffle=False,
-                                         num_workers=nw)
+                                         num_workers=0)
 
 print("using {} images for training, {} images for validation.".format(train_num, val_num))
 
@@ -72,7 +72,7 @@ pre_weights = torch.load(model_weight_path, map_location='cpu')
 #     print(k)
 
 # delete last layer (classifier layer) weights
-pre_dict = {k: v for k, v in pre_weights.items() if "classifier" not in k}
+pre_dict = {k: v for k, v in pre_weights.items() if net.state_dict()[k].numel() == v.numel()}
 missing_keys, unexpected_keys = net.load_state_dict(pre_dict, strict=False)
 
 for param in net.features.parameters():
@@ -88,7 +88,7 @@ best_acc = 0.0
 save_path = './mobilenet_v2_self.pth'
 train_steps = len(train_loader)
 
-for epoch in epochs:
+for epoch in range(epochs):
     net.train()
     running_loss = 0.0
     train_bar = tqdm(train_loader, file=sys.stdout)
