@@ -151,3 +151,4 @@ tensorflow/VGG/weights/
 tensorflow/AlexNet/weights/
 tensorflow/GoogLeNet/weights/
 tensorflow/GoogLeNet/myGoogLeNet.h5
+pytorch/MobileNet/mobilenet_v2.pth
