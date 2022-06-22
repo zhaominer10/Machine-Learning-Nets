@@ -51,7 +51,7 @@ class SqueezeExcitation(nn.Module):
         self.fc2 = nn.Conv2d(squeeze_c, input_c, 1)
 
     def forward(self, x: Tensor) -> Tensor:
-        scale = F.adaptive_max_pool2d(x, output_size=(1, 1))
+        scale = F.adaptive_avg_pool2d(x, output_size=(1, 1))
         scale = self.fc1(scale)
         scale = F.relu(scale, inplace=True)
         scale = self.fc2(scale)
@@ -146,7 +146,7 @@ class MobileNetV3(nn.Module):
         if not inverted_residual_setting:
             raise ValueError("the inverted_residual_setting should not be empty")
         elif not (isinstance(inverted_residual_setting, List) and
-                  all([isinstance(s, inverted_residual_setting) for s in inverted_residual_setting])):
+                  all([isinstance(s, InvertResidualConfig) for s in inverted_residual_setting])):
             raise ValueError("the inverted_residual_setting should be List[InvertResidualConfig]")
 
         if block is None:
@@ -254,6 +254,17 @@ def mobilenet_v3_large(num_classes: int = 1000,
 
 def mobilenet_v3_small(num_classes: int = 1000,
                        reduced_tail: bool = False) -> MobileNetV3:
+    """
+    Constructs a large MobileNetV3 architecture from
+    "Searching for MobileNetV3" <https://arxiv.org/abs/1905.02244>.
+    weights_link:
+    https://download.pytorch.org/models/mobilenet_v3_small-047dcff4.pth
+    Args:
+        num_classes (int): number of classes
+        reduced_tail (bool): If True, reduces the channel counts of all feature layers
+            between C4 and C5 by 2. It is used to reduce the channel redundancy in the
+            backbone for Detection and Segmentation.
+    """
     alpha = 1.0
     bneck_conf = partial(InvertResidualConfig, alpha=alpha)
     adjust_channels = partial(InvertResidualConfig.adjust_channels, alpha=alpha)
