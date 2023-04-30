@@ -37,6 +37,7 @@ def main():
     print(flower_list)
     cla_dict = dict((val, key) for key, val in flower_list.items())
     json_str = json.dumps(cla_dict, indent=4)
+    print(json_str)
     with open('class_indices.json', 'w') as json_file:
         json_file.write(json_str)
 
@@ -83,7 +84,7 @@ def main():
     net.to(device)
     loss_function = nn.CrossEntropyLoss()
     optimizer = optim.Adam(net.parameters(), lr=0.0002)
-    # params = list(net.parameters())
+    params = list(net.parameters())
 
     epochs = 10
     save_path = './AlexNet.pth'
