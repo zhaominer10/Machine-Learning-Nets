@@ -17,7 +17,7 @@ def main():
     print('using {} device.'.format(device))
 
     batch_size = 32
-    epochs = 5
+    epochs = 50
 
     data_transform = {
         "train": transforms.Compose([
@@ -67,11 +67,11 @@ def main():
 
     print("using {} images for training, {} images for validation.".format(train_num, val_num))
 
-    # net = MobileNetV2(num_classes=5)
-    net = mobilenet_v3_large(num_classes=5)
+    net = MobileNetV2(num_classes=5)
+    # net = mobilenet_v3_large(num_classes=5)
 
-    # model_weight_path = "./mobilenet_v2.pth"
-    model_weight_path = "./mobilenet_v3_large.pth"
+    model_weight_path = "./mobilenet_v2.pth"
+    # model_weight_path = "./mobilenet_v3_large.pth"
     assert os.path.exists(model_weight_path), "file {} does not exist.".format(model_weight_path)
     pre_weights = torch.load(model_weight_path, map_location='cpu')
 
@@ -79,9 +79,12 @@ def main():
     #     print(k)
 
     # delete last layer (classifier layer) weights
+    # TODO: don't understand the following line
     pre_dict = {k: v for k, v in pre_weights.items() if net.state_dict()[k].numel() == v.numel()}
+    # pre_dict = {k: v for k, v in pre_weights.items() if "classifier" not in k}
     missing_keys, unexpected_keys = net.load_state_dict(pre_dict, strict=False)
 
+    # comment out, the parameters in features will be updated through training and get a higher accuracy
     for param in net.features.parameters():
         param.requires_grad = False
 
@@ -92,8 +95,8 @@ def main():
     optimizer = optim.Adam(params, lr=0.0001)
 
     best_acc = 0.0
-    save_path = './mobilenet_v3_large_self.pth'
-    # save_path = './mobilenet_v2_self.pth'
+    # save_path = './mobilenet_v3_large_self.pth'
+    save_path = './mobilenet_v2_self.pth'
     train_steps = len(train_loader)
 
     for epoch in range(epochs):
